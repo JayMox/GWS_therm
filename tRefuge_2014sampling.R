@@ -48,7 +48,7 @@ colnames(df14) <- c("NMBay", "Ano")
 #convert dates to interpretible
 df14$date <- as.POSIXct(as.numeric(sapply(strsplit(rownames(df14), split = "X"), "[", 2)), origin = "1970-01-01 00:00:00", tz = "UTC")
 #this takes every second element of a list from the rownames, and converts based on origin
-df14$jday <- as.numeric(julian(sc$date))
+df14$jday <- as.numeric(julian(df$date))
 
 
 ###############PLOTTING
