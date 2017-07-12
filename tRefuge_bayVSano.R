@@ -68,20 +68,51 @@ ggplot(data = mdf, aes(x= site, y = SST)) +
 
 #calculate daily delta
 df <- mutate(df, deltaT = NMBay - Ano)
+df <- mutate(df, month = month(date)); 
+
+df <- merge(df, data.frame(month = seq(1, 12, by = 1), 
+                           month_lab = factor(c("Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"))), sort = F)
+df$month_lab <- factor(df$month_lab, levels(df$month_lab) <- c("Jan", "Feb", "Mar", "Apr", "May", "June", "July", "Aug", "Sep", "Oct", "Nov", "Dec"))
+
 
 ggplot(df, aes(x=date))+
   geom_line(aes(y=NMBay),color = "yellow")+
   geom_line(aes(y=Ano),color = "gray")+
   geom_smooth(aes(y=NMBay),color = "red", se = FALSE, span = 0.2, method="loess")+
-  geom_smooth(aes(y=Ano),color = "blue", se = FALSE, span = 0.2, method="loess")0
+  geom_smooth(aes(y=Ano),color = "blue", se = FALSE, span = 0.2, method="loess")
+
+Tref_summary <- ddply(df, .(month, year), summarize, month_lab = unique(month_lab), max_diff = max(deltaT, na.rm = T))
+Mean_maxdiffs <- ddply(Tref_summary, .(month), summarize, mean_maxdiff = mean(max_diff, na.rm = TRUE), month_lab = unique(month_lab))
+
+#mean/median plots
+ggplot(data = ddply(df, .(month, year), summarize,  mlab = unique(month_lab),  mean_diff = mean(deltaT, na.rm = T), max_diff = max(deltaT, na.rm=T))) + 
+  geom_point(aes(x = mlab, y = mean_diff)) + theme_bw()
+
+ggplot() + 
+  geom_point(data = Mean_maxdiffs, aes(x = month_lab, y = mean_maxdiff, color = "red", size = 2), show.legend = F) + theme_bw() + 
+  scale_y_continuous(limits = c(0, 4))
+
+ggplot() + 
+  geom_point(data = filter(ddply(df, .(month, year), summarize, mlab = unique(month_lab), mean_diff = mean(deltaT, na.rm = T)), year == 2011), 
+             aes(x = mlab, y = mean_diff, size = 3, colour = "red"), show.legend  = F) + labs(title = "Thermal differences between N.Monterey Bay and Santa Cruz", x = "Month", y = "Mean Difference in Water Temperature (Celsius)")
+                                            
+                                                                            
+#MAPS
+raster_map <- data.frame(rasterToPoints(mbay2011[[35]])) #convert to x/y array
+ggplot() +
+  geom_raster(data = raster_map, aes(x,y,fill=X1311552000), show.legend = T) +
+  theme_void() +
+  scale_fill_distiller(palette = "RdYlBu") +
+  coord_fixed() +
+  geom_point(data = data.frame(locs), aes(x = lon, y = lat))
+ggsave
+
+
+ggplot(data = filter(ddply(df, .(month, year), summarize,  mlab = unique(month_lab),  mean_diff = mean(deltaT, na.rm = T)), year != )) + geom_line(aes(x = mlab, y = mean_diff, group = year, color = year)) 
 
 
 
 
-
-
-+
-  facet_wrap(~year,ncol=1)
 
 
 
