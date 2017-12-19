@@ -7,7 +7,7 @@
 library(plyr)
 library(tidyverse)
 
-dd <- "/Volumes/UNTITLED 1/InternalPAT/stomachT"
+dd <- "/Volumes/UNTITLED 1/InternalPAT/"
 
 #read in data
 load(file.path(dd, "CC_internalPAT_July2017.RData"))
@@ -34,8 +34,9 @@ legend("topright",
 #build covars df
 vars <- data.frame(shark = unique(df$shark), 
                    sex = factor(c('M','M','M','M','M','F','F','M','M')),
-                   sizes = c(4.9,4,3.4,4,3,4.9,4.9,4.6,4.6), 
+                   sizes = c(4.9,4,3.4,3.95,3,4.95,4.85,4.55,4.6), 
                    meal=c(2.72,NA,1.83,1.17,4.98,1.56,2.23,3.96,2.41))
+                                                          #n.b: 1.81 + 2.15
 
 #build tibble
 df2 <- merge(df, vars, all.x = T)
