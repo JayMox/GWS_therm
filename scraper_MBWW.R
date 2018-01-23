@@ -11,37 +11,43 @@ library(tidyverse)
 
 #prep bench
 homepg <- "http://www.montereybaywhalewatch.com/sightings/"
-#raw <- tibble(idx = NA, url.idx = NA, url = NA, rawpage = NA, page.df = NA)
+URLs <- str_pad(seq(1:9999), width=4, side="left", pad = 0) #vector of possible html page combis
 raw <- tibble()
-URLs <- #vector of characters of all possible 4digit combos; '0001'-'9999'
-
-#Scrape the webpage
+#Scrape
 for(i in 1:length(URLs)){
+  #if(i == 212 | i == 301 | i == 302){ i = i +1}
   #get page
-  print(paste("working on", URLs[i], sep=" "))
+  print(paste("working on slst", URLs[i], sep=" "))
   url <- paste(homepg, paste("slst",URLs[i],".htm", sep=""), sep="") 
-  (page <- try(read_html(url)) %>% 
+  page <- try(read_html(url) %>% 
       html_nodes("tr+ tr td+ td , td td td~ td+ td , b") %>% 
       html_text())
   #stow metadata & raw draw of webpage
-  raw <- raw %>% bind_rows(tibble(idx = i, url.idx = URLs[i], url = url, 
-                                  page.raw = list(page), days.detected = NA, 
-                                  page.df = NA))
-  
-  #date subdivision RLE magic
-  datevec <- str_detect(page, "[:digit:]{1,2}/[:digit:]{1,2}");
-  raw$days.detected[i] = sum(datevec)
-  print(paste(sum(datevec), "sampling units in this period"))
-  #assign dates to rows
-  didx <- cumsum(rle(datevec)$lengths)[which(rle(datevec)$values)]
-  page <- data.frame(page = page, 
-                     group = c(rep(NA, times = rle(datevec)$lengths[1]), 
-                               rep(page[datevec], 
-                                   times = c(diff(didx), length(page)-last(didx)+1))))
-  
-  #stow off slightly processed data
-  print(paste("adding data from", last(page$group)))
-  raw$page.df[i] = list(page)
+  raw <- try(raw %>% bind_rows(tibble(idx = i, url.idx = URLs[i], url = url, 
+                                  page.raw = list(page), TRs.detected = NA, 
+                                  page.df = NA)))
+  #extra processing if data exists
+  if(class(page) != "try-error"){
+    #date subdivision RLE magic
+    datevec <- str_detect(page, "[:digit:]{1,2}/[:digit:]{1,2}");
+    raw$TRs.detected[i] = sum(datevec)
+    print(paste(sum(datevec), "trip reports in this period"))
+    
+    #assign dates to a grouping column
+    didx <- cumsum(rle(datevec)$lengths)[which(rle(datevec)$values)] #mapping of rows containing dates
+    #build scraped df
+    page <- data.frame(page = page)
+    try(page <- page %>% mutate(group = c(rep(NA, times = rle(datevec)$lengths[1]), 
+                                      rep(page[datevec], times = c(diff(didx), length(page)-last(didx)+1)))))
+    
+    #stow off slightly processed data
+    print(paste("adding data from", last(page$group)))
+    raw$page.df[i] = list(page)
+  }
+  #otherwise print some helpful info
+  if(class(page) == "try-error"){
+    print(paste("404 ERROR ON slst", URLs[i],sep=""))
+  }
 }
 
 
