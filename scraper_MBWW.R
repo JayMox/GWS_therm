@@ -10,6 +10,7 @@ library(dplyr)
 library(tidyverse)
 
 #prep bench
+dd <- "/Users/jmoxley/Documents/GitTank/GWS_therm/data"
 homepg <- "http://www.montereybaywhalewatch.com/sightings/"
 URLs <- str_pad(seq(1:9999), width=4, side="left", pad = 0) #vector of possible html page combis
 raw <- tibble()
@@ -49,25 +50,4 @@ for(i in 1:length(URLs)){
     print(paste("404 ERROR ON slst", URLs[i],sep=""))
   }
 }
-
-
-(url <- paste(homepg, paste("slst",i,".htm", sep=""), sep=""))
-##For loop here to try every webpage bw 1 & max(slist.htm)
-#scrape sightings & dates
-(page <- try(read_html(url)) %>% 
-  html_nodes("tr+ tr td+ td , td td td~ td+ td , b") %>% 
-  html_text())
-#original scrape: "tr+ tr b , br+ center font b , tr+ tr td+ td"i
-
-##for loop to work element by element in page?  Or can I vectorize? 
-#(year <- str_extract(page[1], "[:digit:]{4}"))
-#print(paste(page[1], "currently"))
-datevec <- str_detect(page, "[:digit:]{1,2}/[:digit:]{1,2}"); #print(paste(length(datevec), "in this period"))
-#rle magic
-didx <- cumsum(rle(datevec)$lengths)[which(rle(datevec)$values)]
-#create date subdividers
-page <- data.frame(page = page, group = c(rep(NA, times = rle(datevec)$lengths[1]), 
-                                          rep(page[datevec], times = c(diff(didx), 
-                                                                       length(page)-last(didx)+1))))
-
-#regex into long data
+save(raw, file = file.path(paste(dd, "raw_MBWWscraped.RData", sep="/")))
