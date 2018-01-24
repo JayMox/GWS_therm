@@ -52,7 +52,7 @@ for(i in 1:length(URLs)){
 }
 
 #clean 404 errors (i.e., no wpage at that idx)
-raw <- raw %>% filter(unlist(map_lgl(page.raw, function(x){class(x)!="try-error"}))) 
+raw <- raw %>% filter(map_lgl(page.raw, function(x){class(x)!="try-error"})) 
 print(paste(nrow(raw), " web pages scraped w/o 404 errors"))
 #Save data
-save(raw, file = file.path(paste(dd, "raw_MBWWscraped.RData", sep="/")))
+save(raw, file = file.path(paste(dd, "raw_MBWW.RData", sep="/")))
