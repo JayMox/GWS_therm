@@ -54,5 +54,19 @@ for(i in 1:length(URLs)){
 #clean 404 errors (i.e., no wpage at that idx)
 raw <- raw %>% filter(map_lgl(page.raw, function(x){class(x)!="try-error"})) 
 print(paste(nrow(raw), " web pages scraped w/o 404 errors"))
+
+#clean issues where dates could not be adequately extracted
+sc <- raw %>% filter(map_lgl(page.df, function(x){ncol(x) == 1}))
+for(i in 1:3){
+  page <- sc$page.raw[[i]]
+  datevec <- str_detect(page, "^[:digit:]{1,2}/[:digit:]{1,2}");
+  View(cbind(page, str_extract_all(page, "[:digit:]{1,2}/[:digit:]{1,2}"), datevec))
+  
+  didx <- cumsum(rle(datevec)$lengths)[which(rle(datevec)$values)] #mapping of rows containing dates
+  page <- data.frame(page = page)
+  try(page <- page %>% mutate(group = c(rep(NA, times = rle(datevec)$lengths[1]), 
+                                        rep(page[datevec], times = c(diff(didx), length(page)-last(didx)+1)))))
+}
+
 #Save data
 save(raw, file = file.path(paste(dd, "raw_MBWW.RData", sep="/")))
