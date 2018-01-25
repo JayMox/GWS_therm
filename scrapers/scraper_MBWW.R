@@ -59,7 +59,7 @@ print(paste(nrow(raw), " web pages scraped w/o 404 errors"))
 sc <- raw %>% filter(map_lgl(page.df, function(x){ncol(x) == 1}))
 for(i in 1:3){
   page <- sc$page.raw[[i]]
-  datevec <- str_detect(page, "^[:digit:]{1,2}/[:digit:]{1,2}");
+  datevec <- str_detect(page, "^[:digit:]{1,2}/[:digit:]{1,2}(\\s[a|p]{1}\\.m{1}\\.)?$");
   View(cbind(page, str_extract_all(page, "[:digit:]{1,2}/[:digit:]{1,2}"), datevec))
   
   didx <- cumsum(rle(datevec)$lengths)[which(rle(datevec)$values)] #mapping of rows containing dates
